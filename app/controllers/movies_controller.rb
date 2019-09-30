@@ -12,8 +12,13 @@ class MoviesController < ApplicationController
 
   def index
     @all_ratings = Movie.all_ratings
-    @ratings_checked = params[:ratings].nil? ? @all_ratings : params[:ratings].keys
-    @movies = Movie.with_ratings(@ratings_checked).order(params[:sort])
+    if params[:ratings].nil?
+      flash.keep
+      redirect_to :ratings => session.fetch(:ratings, Hash[@all_ratings.collect { |item| [item, 1] }]), :sort => session[:sort] and return
+    end
+    session.merge!(params.slice(:ratings, :sort))
+    @ratings_checked = session[:ratings]
+    @movies = Movie.with_ratings(@ratings_checked.keys).order(session[:sort])
   end
 
   def new
